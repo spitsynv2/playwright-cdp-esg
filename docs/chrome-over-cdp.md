@@ -79,10 +79,15 @@ The default suite skips that test.
 The stress suite holds many CDP connections at the same time.
 Each test explores Playwright docs for 60 seconds.
 The test attaches a screenshot after each page open and after each scroll.
-`currentTest.attachScreenshot` stores each image for Zebrunner.
+`ESG_STRESS_SCREENSHOTS` caps screenshots per test. The default is `20`.
 
-The reporter uploads screenshots at test end.
-Many tests that end at the same time create concurrent upload load on the client.
+`currentTest.attachScreenshot` keeps PNG. The reporter writes each PNG to disk.
+It uploads the file during the test. It deletes the file after a successful
+upload. The reporter does not keep all PNG bytes in RAM until test end.
+
+`page.screenshot()` still creates a Buffer in the Playwright worker. Worker RSS
+can stay high after capture. A 4 GB client can run out of RAM when many
+workers take many screenshots.
 
 ```bash
 npm run test:stress

@@ -56,7 +56,12 @@ npm run test:stress
 
 That command starts 8 parallel tests by default.
 Each test explores Playwright docs for 60 seconds.
-Each test takes screenshots and attaches them to Zebrunner.
+Each test takes PNG screenshots and attaches them to Zebrunner.
+`ESG_STRESS_SCREENSHOTS` caps screenshots per test. The default is `20`.
+
+The reporter sends each PNG as a stream during the test.
+It deletes the file after upload.
+Playwright worker RAM can still stay high after `page.screenshot()`.
 Each ESG session requests 2 CPU and 2 GB unless you set `ESG_CPU` and `ESG_MEMORY`.
 
 Set `ESG_STRESS_WORKERS` and `ESG_STRESS_TESTS` to change the session count.
@@ -68,6 +73,11 @@ This project pins `@zebrunner/javascript-agent-playwright` to the GitHub fork `s
 
 The published npm package and older reporter builds may not bind the ESG session during the test.
 Use the pinned fork so logs, VNC, and farm video line up with the test.
+
+The pinned reporter keeps screenshot format PNG. It sends each file as a
+stream during the test and deletes it after upload. Playwright screenshot
+Buffers in the worker can still raise RSS. Cap `ESG_WORKERS` and
+`ESG_STRESS_SCREENSHOTS` on a small client.
 
 ## Video
 
@@ -95,6 +105,7 @@ Grid:
 | `ESG_STRESS_TESTS` | Stress test count. Default: `8` |
 | `ESG_STRESS_WORKERS` | Stress worker count for `npm run test:stress`. Default: `8` |
 | `ESG_STRESS_DURATION_MS` | Explore time per stress test. Default: `60000` |
+| `ESG_STRESS_SCREENSHOTS` | Max PNG screenshots per stress test. Default: `20` |
 
 Farm session:
 
