@@ -1,0 +1,21 @@
+{
+  "name": "playwright-cdp-esg",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Playwright Chrome tests that start an ESG Selenium session and connect over CDP",
+  "license": "Apache-2.0",
+  "scripts": {
+    "test": "playwright test",
+    "test:retry": "ESG_RETRY_DEMO=1 playwright test --grep @retry-demo",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@playwright/test": ">=1.58.2",
+    "@types/node": "^24.9.2",
+    "typescript": "^5.9.2"
+  },
+  "dependencies": {
+    "@zebrunner/javascript-agent-playwright": "github:spitsynv2/javascript-agent-playwright#e401fd67a1cc7de1606280990c361880e0e22e6b",
+    "dotenv": "^17.4.2"
+  }
+}
