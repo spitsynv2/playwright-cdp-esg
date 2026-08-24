@@ -56,12 +56,21 @@ npm run test:stress
 
 That command starts 8 parallel tests by default.
 Each test explores Playwright docs for 60 seconds.
-Each test takes PNG screenshots and attaches them to Zebrunner.
+Each test can attach PNG screenshots to Zebrunner.
 `ESG_STRESS_SCREENSHOTS` caps screenshots per test. The default is `20`.
+Set `ESG_STRESS_SCREENSHOTS=0` to attach no screenshots.
 
 The reporter sends each PNG as a stream during the test.
 It deletes the file after upload.
-Playwright worker RAM can still stay high after `page.screenshot()`.
+That does not set the client RAM peak.
+The peak follows Playwright worker count on the client.
+Chrome on ESG is outside the client cgroup.
+
+On a 4 GB client, 15 workers reached about 4010–4095 MB (~98%).
+Tests with 0, 1, or 20 screenshots had almost the same peak.
+Use at most 12 workers on 4 GB. Use 10 when pages are heavy.
+Do not use 15 workers on 4 GB.
+
 Each ESG session requests 2 CPU and 2 GB unless you set `ESG_CPU` and `ESG_MEMORY`.
 
 Set `ESG_STRESS_WORKERS` and `ESG_STRESS_TESTS` to change the session count.
@@ -75,9 +84,9 @@ The published npm package and older reporter builds may not bind the ESG session
 Use the pinned fork so logs, VNC, and farm video line up with the test.
 
 The pinned reporter keeps screenshot format PNG. It sends each file as a
-stream during the test and deletes it after upload. Playwright screenshot
-Buffers in the worker can still raise RSS. Cap `ESG_WORKERS` and
-`ESG_STRESS_SCREENSHOTS` on a small client.
+stream during the test and deletes it after upload. Keep that reporter
+behavior. Client RAM peak follows worker count, not screenshot count.
+On 4 GB, cap `ESG_WORKERS` at 12. Use 10 when pages are heavy. Do not use 15.
 
 ## Video
 
@@ -105,7 +114,7 @@ Grid:
 | `ESG_STRESS_TESTS` | Stress test count. Default: `8` |
 | `ESG_STRESS_WORKERS` | Stress worker count for `npm run test:stress`. Default: `8` |
 | `ESG_STRESS_DURATION_MS` | Explore time per stress test. Default: `60000` |
-| `ESG_STRESS_SCREENSHOTS` | Max PNG screenshots per stress test. Default: `20` |
+| `ESG_STRESS_SCREENSHOTS` | Max PNG screenshots per stress test. Default: `20`. Set `0` for none |
 
 Farm session:
 

@@ -78,16 +78,22 @@ The default suite skips that test.
 
 The stress suite holds many CDP connections at the same time.
 Each test explores Playwright docs for 60 seconds.
-The test attaches a screenshot after each page open and after each scroll.
+The test can attach a screenshot after each page open and after each scroll.
 `ESG_STRESS_SCREENSHOTS` caps screenshots per test. The default is `20`.
+Set `ESG_STRESS_SCREENSHOTS=0` to attach no screenshots.
 
 `currentTest.attachScreenshot` keeps PNG. The reporter writes each PNG to disk.
 It uploads the file during the test. It deletes the file after a successful
 upload. The reporter does not keep all PNG bytes in RAM until test end.
+Keep that reporter behavior. Do not revert it.
 
-`page.screenshot()` still creates a Buffer in the Playwright worker. Worker RSS
-can stay high after capture. A 4 GB client can run out of RAM when many
-workers take many screenshots.
+Client RAM peak follows Playwright worker count. It does not follow screenshot count.
+15 workers on a 4 GB client reached about 4010–4095 MB.
+Tests with 0, 1, or 20 screenshots had almost the same peak.
+Chrome on ESG is outside that 4 GB cgroup.
+
+Use at most 12 workers on a 4 GB client. Use 10 when pages are heavy.
+Do not use 15 workers on 4 GB.
 
 ```bash
 npm run test:stress
