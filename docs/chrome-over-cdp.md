@@ -72,8 +72,11 @@ Call it before the CDP connect.
 It uploads the file during the test. It deletes the file after a successful
 upload. The reporter does not keep all PNG bytes in RAM until test end.
 
-`page.screenshot()` still creates a Buffer in the Playwright worker. Worker RSS
-can stay high after capture. Cap `ESG_WORKERS` on a small client.
+`page.screenshot()` still creates a Buffer in the Playwright worker. V8 can
+keep worker RSS until the worker process exits. Client RAM peak follows
+`ESG_WORKERS`. Screenshot count has little effect.
+Chrome on ESG does not use RAM on the Playwright client.
+On 4 GB, about 10–12 workers left headroom.
 
 ## Retries
 

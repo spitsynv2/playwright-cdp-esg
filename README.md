@@ -3,8 +3,6 @@
 This project starts Chrome on the Zebrunner Selenium Grid (ESG).
 Playwright then attaches to that Chrome through the ESG DevTools endpoint.
 
-Read [Chrome over CDP](docs/chrome-over-cdp.md) for wait rules, video, reporter limits, and idle timeout.
-
 ## Flow
 
 1. Each test sends `POST /session` and starts its own Chrome on ESG.
@@ -56,9 +54,9 @@ The published npm package and older reporter builds may not bind the ESG session
 Use the pinned fork so logs, VNC, and farm video line up with the test.
 
 The pinned reporter keeps screenshot format PNG. It sends each file as a
-stream during the test and deletes it after upload. Playwright screenshot
-Buffers in the worker can still raise RSS. Cap `ESG_WORKERS` on a small
-client.
+stream during the test and deletes it after upload. Client RAM peak follows
+`ESG_WORKERS`. Screenshot count has little effect.
+On 4 GB, about 10–12 workers left headroom.
 
 ## Video
 
