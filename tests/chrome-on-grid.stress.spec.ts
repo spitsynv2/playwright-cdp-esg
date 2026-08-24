@@ -5,6 +5,7 @@ import type { Page } from '@playwright/test';
 const stressEnabled = ['1', 'true'].includes(String(process.env.ESG_STRESS_TEST || '').toLowerCase());
 const stressTests = Math.max(1, Number(process.env.ESG_STRESS_TESTS || 8) || 8);
 const durationMs = Math.max(1_000, Number(process.env.ESG_STRESS_DURATION_MS || 60_000) || 60_000);
+const maxScreenshots = Math.max(0, Number(process.env.ESG_STRESS_SCREENSHOTS || 20) || 20);
 
 const docsPages = [
   'https://playwright.dev/',
@@ -54,11 +55,15 @@ test.describe('Chrome on ESG CDP stress', () => {
       while (Date.now() < deadline) {
         const url = docsPages[pageIndex % docsPages.length];
         await openDocs(page, url);
-        shot += 1;
-        await attachScreenshot(page);
+        if (shot < maxScreenshots) {
+          shot += 1;
+          await attachScreenshot(page);
+        }
         await page.evaluate(() => window.scrollBy(0, 800));
-        shot += 1;
-        await attachScreenshot(page);
+        if (shot < maxScreenshots) {
+          shot += 1;
+          await attachScreenshot(page);
+        }
         pageIndex += 1;
       }
 
