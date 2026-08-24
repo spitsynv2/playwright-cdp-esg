@@ -2,6 +2,7 @@ export type EsgSession = {
   sessionId: string;
   capabilities: Record<string, unknown>;
   host: URL;
+  gridPath: string;
   user: string;
   password: string;
   devtoolsUrl: string;
@@ -34,6 +35,7 @@ export type EsgTimeouts = {
 
 export type EsgConfig = {
   host: URL;
+  gridPath: string;
   user: string;
   password: string;
   browserName: string;
@@ -75,13 +77,13 @@ export function loadZebrunnerOptions(): ZebrunnerSessionOptions {
 }
 
 export function loadEsgConfig(): EsgConfig {
-  const user = requiredEnv('ESG_USER');
-  const password = requiredEnv('ESG_PASSWORD');
+  const connection = resolveGridConnection();
   const zebrunnerOptions = loadZebrunnerOptions();
   return {
-    host: parseEsgHost(process.env.ESG_HOST || 'https://engine.zebrunner.dev'),
-    user,
-    password,
+    host: connection.host,
+    gridPath: connection.gridPath,
+    user: connection.user,
+    password: connection.password,
     browserName: envString('ESG_BROWSER_NAME', 'chrome'),
     browserVersion: envString('ESG_BROWSER_VERSION', 'latest'),
     platformName: envString('ESG_PLATFORM_NAME', 'linux'),
@@ -94,6 +96,7 @@ export function loadEsgConfig(): EsgConfig {
 export function sessionCapabilities(config: EsgConfig) {
   return {
     alwaysMatch: {
+      ...launcherCapabilities(),
       browserName: config.browserName,
       browserVersion: config.browserVersion,
       platformName: config.platformName,
@@ -129,7 +132,7 @@ export function reportingCapabilities(
 }
 
 export async function createEsgSession(config: EsgConfig = loadEsgConfig()): Promise<EsgSession> {
-  const sessionUrl = new URL('/session', config.host);
+  const sessionUrl = gridUrl(config.host, config.gridPath, 'session');
   const response = await fetch(sessionUrl, {
     method: 'POST',
     headers: {
@@ -159,6 +162,7 @@ export async function createEsgSession(config: EsgConfig = loadEsgConfig()): Pro
     sessionId,
     capabilities,
     host: config.host,
+    gridPath: config.gridPath,
     user: config.user,
     password: config.password,
     devtoolsUrl: devtoolsWebSocketUrl(config.host, sessionId),
@@ -166,10 +170,17 @@ export async function createEsgSession(config: EsgConfig = loadEsgConfig()): Pro
 }
 
 export async function maximizeEsgWindow(
-  session: Pick<EsgSession, 'host' | 'sessionId' | 'user' | 'password'>,
+  session: Pick<EsgSession, 'host' | 'gridPath' | 'sessionId' | 'user' | 'password'>,
 ) {
   const { windowMaximizeMs } = loadEsgTimeouts();
-  const maximizeUrl = new URL(`/session/${session.sessionId}/window/maximize`, session.host);
+  const maximizeUrl = gridUrl(
+    session.host,
+    session.gridPath,
+    'session',
+    session.sessionId,
+    'window',
+    'maximize',
+  );
   try {
     const response = await fetch(maximizeUrl, {
       method: 'POST',
@@ -193,9 +204,11 @@ export async function maximizeEsgWindow(
   }
 }
 
-export async function closeEsgSession(session: Pick<EsgSession, 'host' | 'sessionId' | 'user' | 'password'>) {
+export async function closeEsgSession(
+  session: Pick<EsgSession, 'host' | 'gridPath' | 'sessionId' | 'user' | 'password'>,
+) {
   const { sessionCloseMs } = loadEsgTimeouts();
-  const closeUrl = new URL(`/session/${session.sessionId}`, session.host);
+  const closeUrl = gridUrl(session.host, session.gridPath, 'session', session.sessionId);
   try {
     await fetch(closeUrl, {
       method: 'DELETE',
@@ -239,12 +252,75 @@ function parseEsgHost(raw: string): URL {
   return url;
 }
 
-function requiredEnv(name: string): string {
-  const value = process.env[name];
-  if (!value || !value.trim()) {
-    throw new Error(`${name} is required. Copy .env.example to .env and set the ESG credentials.`);
+function resolveGridConnection(): {
+  host: URL;
+  gridPath: string;
+  user: string;
+  password: string;
+} {
+  const hub = parseZebrunnerHub();
+  const user = optionalEnv('ESG_USER') || hub?.user;
+  const password = optionalEnv('ESG_PASSWORD') || hub?.password;
+  if (!user || !password) {
+    throw new Error(
+      'Set ESG_USER and ESG_PASSWORD, or set ZEBRUNNER_HUB_URL with credentials.',
+    );
   }
-  return value.trim();
+
+  const explicitHost = optionalEnv('ESG_HOST');
+  return {
+    host: parseEsgHost(explicitHost || hub?.origin || 'https://engine.zebrunner.dev'),
+    gridPath: explicitHost ? '' : hub?.gridPath || '',
+    user,
+    password,
+  };
+}
+
+function parseZebrunnerHub(): { origin: string; gridPath: string; user: string; password: string } | undefined {
+  const raw = optionalEnv('ZEBRUNNER_HUB_URL');
+  if (!raw) {
+    return undefined;
+  }
+
+  const url = new URL(raw);
+  if (!url.username || !url.password) {
+    throw new Error('ZEBRUNNER_HUB_URL must include a username and a password.');
+  }
+
+  const gridPath = url.pathname.replace(/\/+$/, '');
+  return {
+    origin: url.origin,
+    gridPath: gridPath === '/' ? '' : gridPath,
+    user: url.username,
+    password: url.password,
+  };
+}
+
+function launcherCapabilities(): Record<string, unknown> {
+  const raw = optionalEnv('ZEBRUNNER_CAPABILITIES');
+  if (!raw) {
+    return {};
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    throw new Error('ZEBRUNNER_CAPABILITIES must be a JSON object.');
+  }
+
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new Error('ZEBRUNNER_CAPABILITIES must be a JSON object.');
+  }
+
+  return parsed as Record<string, unknown>;
+}
+
+function gridUrl(host: URL, gridPath: string, ...parts: string[]): URL {
+  const segments = [...gridPath.split('/'), ...parts.flatMap((part) => part.split('/'))].filter(Boolean);
+  const url = new URL(host.origin);
+  url.pathname = `/${segments.join('/')}`;
+  return url;
 }
 
 function optionalEnv(name: string): string | undefined {

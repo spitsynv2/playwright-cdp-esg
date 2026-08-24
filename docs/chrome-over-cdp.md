@@ -57,3 +57,12 @@ Call it before the CDP connect.
 Each Playwright try starts a new ESG session.
 Set `ESG_RETRY_DEMO=1` to run the retry demo test.
 The default suite skips that test.
+
+## Zebrunner launcher
+
+A Zebrunner launcher can set `ZEBRUNNER_HUB_URL`.
+The project reads the user, password, and host from that URL.
+You do not need `ESG_USER` or `ESG_PASSWORD` in that case.
+
+`REPORTING_*` values from the launcher go to the reporter.
+`E3S_URL` is not the Selenium hub.

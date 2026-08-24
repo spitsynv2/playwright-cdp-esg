@@ -19,9 +19,13 @@ Each parallel test has its own ESG session.
 ## Setup
 
 1. Copy `.env.example` to `.env`.
-2. Set `ESG_USER` and `ESG_PASSWORD`.
-3. Set `REPORTING_SERVER_HOSTNAME` and `REPORTING_SERVER_ACCESS_TOKEN` for Zebrunner.
+2. Set `ESG_USER` and `ESG_PASSWORD`, or set `ZEBRUNNER_HUB_URL`.
+3. Set `REPORTING_SERVER_HOSTNAME` and `REPORTING_SERVER_ACCESS_TOKEN` for a local run.
 4. Run `npm install`.
+
+A Zebrunner launcher already sets `ZEBRUNNER_HUB_URL` and `REPORTING_*`.
+You do not need a `.env` file in that case.
+`E3S_URL` is not the Selenium hub. Tests use `ZEBRUNNER_HUB_URL` for `POST /session`.
 
 Do not commit `.env`. That file holds credentials.
 
@@ -64,9 +68,10 @@ Grid:
 
 | Variable | Purpose |
 | --- | --- |
-| `ESG_HOST` | ESG base URL. Default: `https://engine.zebrunner.dev` |
-| `ESG_USER` | Basic-auth user for `POST /session` |
-| `ESG_PASSWORD` | Basic-auth password for `POST /session` |
+| `ESG_HOST` | ESG base URL. Default: hub origin or `https://engine.zebrunner.dev` |
+| `ESG_USER` | Basic-auth user. Optional when `ZEBRUNNER_HUB_URL` is set |
+| `ESG_PASSWORD` | Basic-auth password. Optional when `ZEBRUNNER_HUB_URL` is set |
+| `ZEBRUNNER_HUB_URL` | Selenium hub URL from a Zebrunner launcher. Includes user and password |
 | `ESG_BROWSER_NAME` | Browser name. Default: `chrome` |
 | `ESG_BROWSER_VERSION` | Browser version. Default: `latest` |
 | `ESG_PLATFORM_NAME` | Platform name. Default: `linux` |
@@ -121,4 +126,4 @@ Playwright connects to the browser WebSocket:
 `wss://<host>/devtools/<sessionId>/`
 
 That path does not use basic auth.
-`POST /session` and `DELETE /session/<id>` still use `ESG_USER` and `ESG_PASSWORD`.
+`POST /session` uses `ESG_USER` and `ESG_PASSWORD`, or the user in `ZEBRUNNER_HUB_URL`.
