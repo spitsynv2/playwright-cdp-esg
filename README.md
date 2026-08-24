@@ -55,6 +55,11 @@ This project pins `@zebrunner/javascript-agent-playwright` to the GitHub fork `s
 The published npm package and older reporter builds may not bind the ESG session during the test.
 Use the pinned fork so logs, VNC, and farm video line up with the test.
 
+The pinned reporter keeps screenshot format PNG. It sends each file as a
+stream during the test and deletes it after upload. Playwright screenshot
+Buffers in the worker can still raise RSS. Cap `ESG_WORKERS` on a small
+client.
+
 ## Video
 
 ESG farm records video when `ESG_ENABLE_VIDEO` is `true`.

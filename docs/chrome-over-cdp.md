@@ -68,6 +68,13 @@ VNC and farm video can attach late or not at all for that test.
 Use `currentTest.attachSessionCapabilities` as soon as ESG returns the `sessionId`.
 Call it before the CDP connect.
 
+`currentTest.attachScreenshot` keeps PNG. The reporter writes each PNG to disk.
+It uploads the file during the test. It deletes the file after a successful
+upload. The reporter does not keep all PNG bytes in RAM until test end.
+
+`page.screenshot()` still creates a Buffer in the Playwright worker. Worker RSS
+can stay high after capture. Cap `ESG_WORKERS` on a small client.
+
 ## Retries
 
 Each Playwright try starts a new ESG session.
