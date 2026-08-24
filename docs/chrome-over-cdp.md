@@ -39,6 +39,22 @@ Playwright video needs a browser that Playwright starts.
 
 This project also sets `screenshot` and `trace` to `off`.
 
+## Idle timeout
+
+`ESG_IDLE_TIMEOUT` sets the farm session idle timeout in seconds.
+The create-session request sends this value in `zebrunner:options.idleTimeout`.
+The default is `120`.
+
+Set `ESG_IDLE_TIMEOUT` near the default, or lower.
+Do not send a very large idle timeout.
+
+If Playwright crashes, the fixture cannot send `DELETE /session`.
+If a task abort stops the run in the middle, the fixture also cannot close the session.
+ESG then waits until the idle timeout ends.
+Then ECS stops the browser task.
+
+A large idle timeout keeps that browser task on ECS for a long time.
+
 ## Zebrunner reporter
 
 Live session attach needs a reporter that starts the Zebrunner test session during the test.

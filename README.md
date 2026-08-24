@@ -3,7 +3,7 @@
 This project starts Chrome on the Zebrunner Selenium Grid (ESG).
 Playwright then attaches to that Chrome through the ESG DevTools endpoint.
 
-Read [Chrome over CDP](docs/chrome-over-cdp.md) for wait rules, video, and reporter limits.
+Read [Chrome over CDP](docs/chrome-over-cdp.md) for wait rules, video, reporter limits, and idle timeout.
 
 ## Flow
 
@@ -88,7 +88,7 @@ Farm session:
 | `ESG_ENABLE_DEBUG` | Farm debug. Default: `false` |
 | `ESG_CPU` | Session CPU units. Default: `2048` |
 | `ESG_MEMORY` | Session memory units. Default: `2048` |
-| `ESG_IDLE_TIMEOUT` | Idle timeout in seconds. Default: `120` |
+| `ESG_IDLE_TIMEOUT` | Idle timeout in seconds. Default: `120`. Do not set a very large value |
 | `ESG_MAX_TIMEOUT` | Max session time in seconds. Default: `3600` |
 | `ESG_SCREEN_RESOLUTION` | Screen size. Default: `1920x1080x24` |
 | `ESG_VIDEO_SCREEN_SIZE` | Farm video size. Default: `1920x1080` |
