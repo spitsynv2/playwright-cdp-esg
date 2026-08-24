@@ -3,8 +3,6 @@
 This project starts Chrome on the Zebrunner Selenium Grid (ESG).
 Playwright then attaches to that Chrome through the ESG DevTools endpoint.
 
-Read [Chrome over CDP](docs/chrome-over-cdp.md) for wait rules, video, reporter limits, and idle timeout.
-
 ## Flow
 
 1. Each test sends `POST /session` and starts its own Chrome on ESG.
@@ -62,14 +60,13 @@ Set `ESG_STRESS_SCREENSHOTS=0` to attach no screenshots.
 
 The reporter sends each PNG as a stream during the test.
 It deletes the file after upload.
-That does not set the client RAM peak.
-The peak follows Playwright worker count on the client.
-Chrome on ESG is outside the client cgroup.
+The client RAM peak follows Playwright worker count.
+Screenshot count has little effect.
+Chrome on ESG does not use RAM on the Playwright client.
 
-On a 4 GB client, 15 workers reached about 4010–4095 MB (~98%).
-Tests with 0, 1, or 20 screenshots had almost the same peak.
-Use at most 12 workers on 4 GB. Use 10 when pages are heavy.
-Do not use 15 workers on 4 GB.
+On a 4 GB client, 15 workers reached about 98% RAM.
+0, 1, and 20 screenshots per test had almost the same peak.
+About 10–12 workers left headroom on 4 GB.
 
 Each ESG session requests 2 CPU and 2 GB unless you set `ESG_CPU` and `ESG_MEMORY`.
 
@@ -85,8 +82,8 @@ Use the pinned fork so logs, VNC, and farm video line up with the test.
 
 The pinned reporter keeps screenshot format PNG. It sends each file as a
 stream during the test and deletes it after upload. Keep that reporter
-behavior. Client RAM peak follows worker count, not screenshot count.
-On 4 GB, cap `ESG_WORKERS` at 12. Use 10 when pages are heavy. Do not use 15.
+behavior. Client RAM peak follows `ESG_WORKERS`, not screenshot count.
+On 4 GB, about 10–12 workers left headroom.
 
 ## Video
 

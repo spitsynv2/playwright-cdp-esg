@@ -85,15 +85,13 @@ Set `ESG_STRESS_SCREENSHOTS=0` to attach no screenshots.
 `currentTest.attachScreenshot` keeps PNG. The reporter writes each PNG to disk.
 It uploads the file during the test. It deletes the file after a successful
 upload. The reporter does not keep all PNG bytes in RAM until test end.
-Keep that reporter behavior. Do not revert it.
+Keep that reporter behavior.
 
-Client RAM peak follows Playwright worker count. It does not follow screenshot count.
-15 workers on a 4 GB client reached about 4010–4095 MB.
-Tests with 0, 1, or 20 screenshots had almost the same peak.
-Chrome on ESG is outside that 4 GB cgroup.
-
-Use at most 12 workers on a 4 GB client. Use 10 when pages are heavy.
-Do not use 15 workers on 4 GB.
+Client RAM peak follows Playwright worker count, not screenshot count.
+15 workers on a 4 GB client reached about 98% RAM.
+0, 1, and 20, 50 screenshots per test had almost the same peak.
+Chrome on ESG does not use RAM on the Playwright client.
+About 10–12 workers left headroom on 4 GB.
 
 ```bash
 npm run test:stress
