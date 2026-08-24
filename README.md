@@ -44,6 +44,20 @@ npm run test:retry
 That command sets `ESG_RETRY_DEMO=1` and selects `@retry-demo`.
 A default run skips the retry demo and does not start an ESG session for it.
 
+To run the CDP stress suite:
+
+```bash
+npm run test:stress
+```
+
+That command starts 8 parallel tests by default.
+Each test explores Playwright docs for 60 seconds.
+Each test takes screenshots and attaches them to Zebrunner.
+Each ESG session requests 4 CPU and 4 GB.
+
+Set `ESG_STRESS_WORKERS` and `ESG_STRESS_TESTS` to change the session count.
+A default run skips the stress suite.
+
 ## Zebrunner reporter
 
 This project pins `@zebrunner/javascript-agent-playwright` to the GitHub fork `spitsynv2/javascript-agent-playwright`.
@@ -72,6 +86,10 @@ Grid:
 | `ESG_PLATFORM_NAME` | Platform name. Default: `linux` |
 | `ESG_WORKERS` | Parallel test count. Default: `2` |
 | `ESG_RETRY_DEMO` | Set `1` or `true` to run the retry demo. Default: skip |
+| `ESG_STRESS_TEST` | Set `1` or `true` to run the CDP stress suite. Default: skip |
+| `ESG_STRESS_TESTS` | Stress test count. Default: `8` |
+| `ESG_STRESS_WORKERS` | Stress worker count for `npm run test:stress`. Default: `8` |
+| `ESG_STRESS_DURATION_MS` | Explore time per stress test. Default: `60000` |
 
 Farm session:
 

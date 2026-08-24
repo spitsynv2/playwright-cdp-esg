@@ -7,6 +7,7 @@
   "scripts": {
     "test": "playwright test",
     "test:retry": "ESG_RETRY_DEMO=1 playwright test --grep @retry-demo",
+    "test:stress": "ESG_STRESS_TEST=1 ESG_CPU=4096 ESG_MEMORY=4096 ESG_IDLE_TIMEOUT=300 ESG_WORKERS=\"${ESG_STRESS_WORKERS:-8}\" ESG_STRESS_TESTS=\"${ESG_STRESS_TESTS:-8}\" ESG_TEST_TIMEOUT_MS=180000 ESG_STEP_PAUSE_MS=0 REPORTING_LAUNCH_DISPLAY_NAME=\"Playwright CDP stress\" playwright test --grep @stress-cdp",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {

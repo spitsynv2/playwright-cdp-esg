@@ -57,3 +57,23 @@ Call it before the CDP connect.
 Each Playwright try starts a new ESG session.
 Set `ESG_RETRY_DEMO=1` to run the retry demo test.
 The default suite skips that test.
+
+## CDP stress
+
+The stress suite holds many CDP connections at the same time.
+Each test explores Playwright docs for 60 seconds.
+The test attaches a screenshot after each page open and after each scroll.
+`currentTest.attachScreenshot` stores each image for Zebrunner.
+
+The reporter uploads screenshots at test end.
+Many tests that end at the same time create concurrent upload load on the client.
+
+```bash
+npm run test:stress
+```
+
+The script sets `ESG_CPU=4096` and `ESG_MEMORY=4096` for each farm session.
+It starts 8 workers and 8 tests by default.
+
+Set `ESG_STRESS_WORKERS` and `ESG_STRESS_TESTS` to the same value to raise the CDP count.
+The default suite skips the stress tests.
