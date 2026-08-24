@@ -77,3 +77,12 @@ It starts 8 workers and 8 tests by default.
 
 Set `ESG_STRESS_WORKERS` and `ESG_STRESS_TESTS` to the same value to raise the CDP count.
 The default suite skips the stress tests.
+
+## Zebrunner launcher
+
+A Zebrunner launcher can set `ZEBRUNNER_HUB_URL`.
+The project reads the user, password, and host from that URL.
+You do not need `ESG_USER` or `ESG_PASSWORD` in that case.
+
+`REPORTING_*` values from the launcher go to the reporter.
+`E3S_URL` is not the Selenium hub.

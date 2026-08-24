@@ -9,7 +9,7 @@ const reportingEnabled =
   String(process.env.REPORTING_ENABLED).toLowerCase() === 'true' &&
   Boolean(process.env.REPORTING_SERVER_HOSTNAME && process.env.REPORTING_SERVER_ACCESS_TOKEN);
 
-const workers = process.env.ESG_WORKERS ? Number(process.env.ESG_WORKERS) : 2;
+const workers = Number(process.env.ESG_WORKERS || process.env.ESG_STRESS_WORKERS || 2) || 2;
 const timeouts = loadEsgTimeouts();
 
 export default defineConfig({
