@@ -57,7 +57,7 @@ npm run test:stress
 That command starts 8 parallel tests by default.
 Each test explores Playwright docs for 60 seconds.
 Each test takes screenshots and attaches them to Zebrunner.
-Each ESG session requests 4 CPU and 4 GB.
+Each ESG session requests 2 CPU and 2 GB unless you set `ESG_CPU` and `ESG_MEMORY`.
 
 Set `ESG_STRESS_WORKERS` and `ESG_STRESS_TESTS` to change the session count.
 A default run skips the stress suite.

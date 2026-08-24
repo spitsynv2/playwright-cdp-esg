@@ -21,10 +21,9 @@ const docsPages = [
   'https://playwright.dev/docs/api/class-page',
 ];
 
-async function attachScreenshot(page: Page, label: string) {
+async function attachScreenshot(page: Page) {
   const image = await page.screenshot({ type: 'png' });
   currentTest.attachScreenshot(image);
-  currentTest.log.info(`Screenshot ${label} ${image.length} bytes`);
 }
 
 async function openDocs(page: Page, url: string) {
@@ -56,10 +55,10 @@ test.describe('Chrome on ESG CDP stress', () => {
         const url = docsPages[pageIndex % docsPages.length];
         await openDocs(page, url);
         shot += 1;
-        await attachScreenshot(page, `${index}-${shot}-open`);
+        await attachScreenshot(page);
         await page.evaluate(() => window.scrollBy(0, 800));
         shot += 1;
-        await attachScreenshot(page, `${index}-${shot}-scroll`);
+        await attachScreenshot(page);
         pageIndex += 1;
       }
 

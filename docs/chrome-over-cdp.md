@@ -72,7 +72,7 @@ Many tests that end at the same time create concurrent upload load on the client
 npm run test:stress
 ```
 
-The script sets `ESG_CPU=4096` and `ESG_MEMORY=4096` for each farm session.
+Each farm session uses `ESG_CPU=2048` and `ESG_MEMORY=2048` unless you set those variables.
 It starts 8 workers and 8 tests by default.
 
 Set `ESG_STRESS_WORKERS` and `ESG_STRESS_TESTS` to the same value to raise the CDP count.
