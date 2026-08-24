@@ -5,7 +5,8 @@ import type { Page } from '@playwright/test';
 const stressEnabled = ['1', 'true'].includes(String(process.env.ESG_STRESS_TEST || '').toLowerCase());
 const stressTests = Math.max(1, Number(process.env.ESG_STRESS_TESTS || 8) || 8);
 const durationMs = Math.max(1_000, Number(process.env.ESG_STRESS_DURATION_MS || 60_000) || 60_000);
-const maxScreenshots = Math.max(0, Number(process.env.ESG_STRESS_SCREENSHOTS || 20) || 20);
+const parsedScreenshots = Number(process.env.ESG_STRESS_SCREENSHOTS);
+const maxScreenshots = Math.max(0, Number.isFinite(parsedScreenshots) ? parsedScreenshots : 20);
 
 const docsPages = [
   'https://playwright.dev/',
@@ -68,7 +69,12 @@ test.describe('Chrome on ESG CDP stress', () => {
       }
 
       currentTest.log.info(`Stress ${index} attached ${shot} screenshots`);
-      expect(shot).toBeGreaterThan(0);
+      expect(shot).toBeLessThanOrEqual(maxScreenshots);
+      if (maxScreenshots > 0) {
+        expect(shot).toBeGreaterThan(0);
+      } else {
+        expect(shot).toBe(0);
+      }
     });
   }
 });
