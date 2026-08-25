@@ -9,7 +9,8 @@ Playwright then attaches to that Chrome through the ESG DevTools endpoint.
 2. ESG returns a `sessionId` for that test.
 3. The fixture calls `currentTest.attachSessionCapabilities` with that `sessionId`.
 4. Playwright calls `chromium.connectOverCDP` on `wss://<host>/devtools/<sessionId>/`.
-5. The fixture sends `DELETE /session/<sessionId>` after the test.
+5. The session helper sends `GET /clipboard/<sessionId>` on an interval.
+6. The fixture sends `DELETE /session/<sessionId>` after the test.
 
 `ESG_WORKERS` sets how many tests run at the same time.
 Each parallel test has its own ESG session.
@@ -65,6 +66,22 @@ ESG farm records video when `ESG_ENABLE_VIDEO` is `true`.
 Keep Playwright `use.video` at `off` in `playwright.config.ts`.
 Playwright video does not apply to a browser that CDP attach opens.
 
+## Keep-alive
+
+ESG stops a session when no HTTP request occurs for `ESG_IDLE_TIMEOUT` seconds.
+A CDP WebSocket does not count as an HTTP request.
+Playwright work after `connectOverCDP` uses that WebSocket.
+
+If a test is longer than the idle timeout, ESG can stop the browser task.
+The session helper sends `GET /clipboard/<sessionId>` on an interval.
+This GET updates the ESG idle timer.
+This GET does not control Chrome.
+
+The default interval is one third of `ESG_IDLE_TIMEOUT`.
+The minimum interval is 5000 milliseconds.
+Set `ESG_KEEPALIVE_INTERVAL_MS` to change the interval.
+Set `ESG_KEEPALIVE_INTERVAL_MS` to `0` to disable keep-alive.
+
 ## Environment
 
 Grid:
@@ -91,7 +108,7 @@ Farm session:
 | `ESG_ENABLE_DEBUG` | Farm debug. Default: `false` |
 | `ESG_CPU` | Session CPU units. Default: `2048` |
 | `ESG_MEMORY` | Session memory units. Default: `2048` |
-| `ESG_IDLE_TIMEOUT` | Idle timeout in seconds. Default: `120`. Do not set a very large value |
+| `ESG_IDLE_TIMEOUT` | Idle timeout in seconds. Default: `120`. Do not set a very large value. A CDP WebSocket does not reset this timer |
 | `ESG_MAX_TIMEOUT` | Max session time in seconds. Default: `3600` |
 | `ESG_SCREEN_RESOLUTION` | Screen size. Default: `1920x1080x24` |
 | `ESG_VIDEO_SCREEN_SIZE` | Farm video size. Default: `1920x1080` |
@@ -110,6 +127,7 @@ Timeouts (milliseconds):
 | `ESG_CDP_CONNECT_TIMEOUT_MS` | CDP connect timeout. Default: `60000` |
 | `ESG_BROWSER_FIXTURE_TIMEOUT_MS` | Browser fixture timeout. Default: `70000` |
 | `ESG_TEST_TIMEOUT_MS` | Playwright test timeout. Default: `120000` |
+| `ESG_KEEPALIVE_INTERVAL_MS` | Keep-alive `GET /clipboard/<sessionId>` interval. Default: `ESG_IDLE_TIMEOUT / 3` (min `5000`). Set `0` to disable |
 
 Zebrunner reporter:
 
