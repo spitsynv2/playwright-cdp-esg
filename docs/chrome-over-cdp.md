@@ -48,6 +48,20 @@ The default is `120`.
 Set `ESG_IDLE_TIMEOUT` near the default, or lower.
 Do not send a very large idle timeout.
 
+ESG stops a session when no HTTP request occurs for `ESG_IDLE_TIMEOUT` seconds.
+A CDP WebSocket does not count as an HTTP request.
+Playwright work after `connectOverCDP` uses that WebSocket.
+
+If a test is longer than the idle timeout, ESG can stop the browser task.
+The session helper sends `GET /clipboard/<sessionId>` on an interval.
+This GET updates the ESG idle timer.
+This GET does not control Chrome.
+
+The default interval is one third of `ESG_IDLE_TIMEOUT`.
+The minimum interval is 5000 milliseconds.
+Set `ESG_KEEPALIVE_INTERVAL_MS` to change the interval.
+Set `ESG_KEEPALIVE_INTERVAL_MS` to `0` to disable keep-alive.
+
 If Playwright crashes, the fixture cannot send `DELETE /session`.
 If a task abort stops the run in the middle, the fixture also cannot close the session.
 ESG then waits until the idle timeout ends.
