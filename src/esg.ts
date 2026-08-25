@@ -6,6 +6,7 @@ export type EsgSession = {
   user: string;
   password: string;
   devtoolsUrl: string;
+  stopKeepAlive: () => void;
 };
 
 export type ZebrunnerSessionOptions = {
@@ -31,6 +32,7 @@ export type EsgTimeouts = {
   cdpConnectMs: number;
   browserFixtureMs: number;
   testMs: number;
+  keepAliveIntervalMs: number;
 };
 
 export type EsgConfig = {
@@ -48,6 +50,9 @@ export type EsgConfig = {
 
 export function loadEsgTimeouts(): EsgTimeouts {
   const cdpConnectMs = envNumber('ESG_CDP_CONNECT_TIMEOUT_MS', 60_000);
+  const idleTimeoutSeconds = envNumber('ESG_IDLE_TIMEOUT', 120);
+  const defaultKeepAliveIntervalMs =
+    idleTimeoutSeconds > 0 ? Math.max(5_000, Math.floor((idleTimeoutSeconds * 1000) / 3)) : 0;
   return {
     sessionCreateMs: envNumber('ESG_SESSION_CREATE_TIMEOUT_MS', 10 * 60 * 1000),
     sessionCloseMs: envNumber('ESG_SESSION_CLOSE_TIMEOUT_MS', 30_000),
@@ -56,6 +61,7 @@ export function loadEsgTimeouts(): EsgTimeouts {
     cdpConnectMs,
     browserFixtureMs: envNumber('ESG_BROWSER_FIXTURE_TIMEOUT_MS', cdpConnectMs + 10_000),
     testMs: envNumber('ESG_TEST_TIMEOUT_MS', 120_000),
+    keepAliveIntervalMs: envNumber('ESG_KEEPALIVE_INTERVAL_MS', defaultKeepAliveIntervalMs),
   };
 }
 
@@ -158,7 +164,7 @@ export async function createEsgSession(config: EsgConfig = loadEsgConfig()): Pro
   }
 
   const capabilities = extractCapabilities(body);
-  return {
+  const session = {
     sessionId,
     capabilities,
     host: config.host,
@@ -166,6 +172,57 @@ export async function createEsgSession(config: EsgConfig = loadEsgConfig()): Pro
     user: config.user,
     password: config.password,
     devtoolsUrl: devtoolsWebSocketUrl(config.host, sessionId),
+  };
+  return {
+    ...session,
+    stopKeepAlive: startEsgKeepAlive(session, config.timeouts.keepAliveIntervalMs),
+  };
+}
+
+export function startEsgKeepAlive(
+  session: Pick<EsgSession, 'host' | 'gridPath' | 'sessionId' | 'user' | 'password'>,
+  intervalMs: number,
+): () => void {
+  if (intervalMs <= 0) {
+    return () => {};
+  }
+
+  const abort = new AbortController();
+  let inFlight = false;
+
+  const ping = async () => {
+    if (inFlight || abort.signal.aborted) {
+      return;
+    }
+    inFlight = true;
+    const keepAliveUrl = gridUrl(session.host, session.gridPath, 'clipboard', session.sessionId);
+    try {
+      await fetch(keepAliveUrl, {
+        method: 'GET',
+        headers: {
+          Authorization: basicAuthHeader(session.user, session.password),
+          Accept: 'text/plain, application/json',
+        },
+        signal: AbortSignal.any([abort.signal, AbortSignal.timeout(10_000)]),
+      });
+    } catch (error) {
+      if (!abort.signal.aborted) {
+        console.warn(
+          `ESG session keep-alive failed for ${session.sessionId}: ${(error as Error).message}`,
+        );
+      }
+    } finally {
+      inFlight = false;
+    }
+  };
+
+  const timer = setInterval(() => {
+    void ping();
+  }, intervalMs);
+
+  return () => {
+    abort.abort();
+    clearInterval(timer);
   };
 }
 
@@ -205,8 +262,11 @@ export async function maximizeEsgWindow(
 }
 
 export async function closeEsgSession(
-  session: Pick<EsgSession, 'host' | 'gridPath' | 'sessionId' | 'user' | 'password'>,
+  session: Pick<EsgSession, 'host' | 'gridPath' | 'sessionId' | 'user' | 'password'> & {
+    stopKeepAlive?: () => void;
+  },
 ) {
+  session.stopKeepAlive?.();
   const { sessionCloseMs } = loadEsgTimeouts();
   const closeUrl = gridUrl(session.host, session.gridPath, 'session', session.sessionId);
   try {
